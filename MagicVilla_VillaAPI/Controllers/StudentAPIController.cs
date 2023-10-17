@@ -2,23 +2,32 @@
 using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Data;
-using System.Runtime.CompilerServices;
-using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.JsonPatch;
 
 namespace MagicVilla_VillaAPI.Controllers
 {
     [Route("api/studentAPI")]
     [ApiController]
+
+    
     public class StudentAPIController : ControllerBase
     {
+        private readonly ApplicationDBContext _db;
+
+        public StudentAPIController(ApplicationDBContext db)
+        {
+            _db = db;
+        }
+
+
+
         public ActionResult<StudentDTO> CreatedAT { get; private set; }
+        public ApplicationDBContext Db { get; }
 
         [HttpGet]
-        public IEnumerable<StudentDTO> GetStudents()
+        public IActionResult GetStudents()
         {
-            return StudentData.StudentsList;
-
+            return Ok(_db.Students.ToList());
         }
 
 
@@ -40,7 +49,7 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
+            var student = _db.Students.FirstOrDefault(u => u.Id == id);
 
             if (student == null)
             {
@@ -62,13 +71,22 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            student.Id = StudentData.StudentsList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
-            StudentData.StudentsList.Add(student);
+            //student.Id = StudentData.StudentsList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
+            //StudentData.StudentsList.Add(student);
 
-            //Console.WriteLine(StudentData.StudentsList);
+            Student model = new Student
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Class = student.Class,
+                Weight = student.Weight,
+                CreatedAt = DateTime.Now
+            };
 
-            //return Ok(student);
-            return CreatedAtRoute("GetStudent", new { id = student.Id }, student);
+            _db.Students.Add(model);
+            _db.SaveChanges();
+
+            return CreatedAtRoute("GetStudent", new { id = student.Id }, model);
         }
 
 
@@ -85,13 +103,16 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
+            //var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
+            var student = _db.Students.FirstOrDefault(u => u.Id == id);
             if (student == null)
             {
                 return NotFound();
             }
 
-            StudentData.StudentsList.Remove(student);
+            _db.Students.Remove(student);
+            _db.SaveChanges();
+
             return NoContent();
         }
 
@@ -107,14 +128,20 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
-            student.Name = updatedStudent.Name;
+            Student model = new Student
+            {
+                Id = updatedStudent.Id,
+                Name = updatedStudent.Name,
+                Class = updatedStudent.Class,
+                Weight = updatedStudent.Weight,
+            };
+
+            _db.Students.Update(model);
 
             return NoContent();
         }
 
         [HttpPatch("id:int" , Name = "PartialUpdateStudent")]
-
         public IActionResult PartialUpdateStudent(int id , JsonPatchDocument<StudentDTO> patchStudentDTO)
         {
             if(patchStudentDTO == null || id == 0)
@@ -122,21 +149,43 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
+            var student = _db.Students.FirstOrDefault(u => u.Id == id);
+
             if(student == null)
             {
                 return NotFound();
             }
 
-            patchStudentDTO.ApplyTo(student, ModelState);
+            StudentDTO studentDTO = new()
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Class = student.Class,
+                Weight = student.Weight,
+                CreatedAt = student.CreatedAt
+            };
+
+
+            patchStudentDTO.ApplyTo(studentDTO, ModelState);
+
+            Student model = new Student()
+            {
+                Id = studentDTO.Id,
+                Name = studentDTO.Name,
+                Class = studentDTO.Class,
+                Weight = studentDTO.Weight,
+                CreatedAt = studentDTO.CreatedAt
+            };
+
+
+            _db.Students.Update(model);
+            _db.SaveChanges();
+
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
-
-            return NoContent(); 
-
-
+            return NoContent();
         }
 
 
