@@ -3,6 +3,7 @@ using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Data;
 using Microsoft.AspNetCore.JsonPatch;
+using AutoMapper;
 
 namespace MagicVilla_VillaAPI.Controllers
 {
@@ -13,10 +14,12 @@ namespace MagicVilla_VillaAPI.Controllers
     public class StudentAPIController : ControllerBase
     {
         private readonly ApplicationDBContext _db;
+        private readonly IMapper _mapper;
 
-        public StudentAPIController(ApplicationDBContext db)
+        public StudentAPIController(ApplicationDBContext db , IMapper mapper)
         {
             _db = db;
+            _mapper = mapper;
         }
 
 
@@ -74,14 +77,7 @@ namespace MagicVilla_VillaAPI.Controllers
             //student.Id = StudentData.StudentsList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
             //StudentData.StudentsList.Add(student);
 
-            Student model = new Student
-            {
-                Id = student.Id,
-                Name = student.Name,
-                Class = student.Class,
-                Weight = student.Weight,
-                CreatedAt = DateTime.Now
-            };
+            Student model = _mapper.Map<Student>(student);
 
             _db.Students.Add(model);
             _db.SaveChanges();
@@ -128,15 +124,9 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            Student model = new Student
-            {
-                Id = updatedStudent.Id,
-                Name = updatedStudent.Name,
-                Class = updatedStudent.Class,
-                Weight = updatedStudent.Weight,
-            };
-
+            Student model = _mapper.Map<Student>(updatedStudent);
             _db.Students.Update(model);
+            _db.SaveChanges();
 
             return NoContent();
         }
@@ -156,26 +146,12 @@ namespace MagicVilla_VillaAPI.Controllers
                 return NotFound();
             }
 
-            StudentDTO studentDTO = new()
-            {
-                Id = student.Id,
-                Name = student.Name,
-                Class = student.Class,
-                Weight = student.Weight,
-                CreatedAt = student.CreatedAt
-            };
+            StudentDTO studentDTO = _mapper.Map<StudentDTO>(student);
 
 
             patchStudentDTO.ApplyTo(studentDTO, ModelState);
 
-            Student model = new Student()
-            {
-                Id = studentDTO.Id,
-                Name = studentDTO.Name,
-                Class = studentDTO.Class,
-                Weight = studentDTO.Weight,
-                CreatedAt = studentDTO.CreatedAt
-            };
+            Student model = _mapper.Map<Student>(studentDTO);
 
 
             _db.Students.Update(model);
