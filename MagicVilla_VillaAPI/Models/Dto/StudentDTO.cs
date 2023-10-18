@@ -2,7 +2,7 @@
 {
     public class StudentDTO
     {
-        public int Id { get; set; }
+        public int Id { get; internal set; }
 
         public string Name { get; set; }
         public int Class { get; set; }
