@@ -1,0 +1,29 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/studentAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+      "UpstreamPathTemplate": "/student",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET" , "PATCH" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/teacherAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+      "UpstreamPathTemplate": "/teacher",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET" , "PATCH" ]
+    }
+
+  ]
+}

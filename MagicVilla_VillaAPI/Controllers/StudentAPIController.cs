@@ -34,7 +34,7 @@ namespace MagicVilla_VillaAPI.Controllers
         }
 
 
-        [HttpGet("id:int", Name = "GetStudent")]
+        [HttpGet("id", Name = "GetStudent")]
 
         // this is much more readable 
         [ProducesResponseType(StatusCodes.Status200OK)] // possible return status from this request
@@ -88,7 +88,7 @@ namespace MagicVilla_VillaAPI.Controllers
 
 
         // delete request
-        [HttpDelete("id:int", Name = "RemoveStudent")]
+        [HttpDelete("id", Name = "RemoveStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -112,26 +112,27 @@ namespace MagicVilla_VillaAPI.Controllers
             return NoContent();
         }
 
-        [HttpPut("id:int", Name = "UpdateStudent")]
+        [HttpPut("id", Name = "UpdateStudent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
 
         public IActionResult UpdateStudent(int id, [FromBody] StudentDTO updatedStudent)
         {
-            if (id != updatedStudent.Id)
-            {
-                return BadRequest();
-            }
+            //if (id != updatedStudent.Id)
+            //{
+            //    return BadRequest();
+            //}
 
             Student model = _mapper.Map<Student>(updatedStudent);
+            model.Id = id;
             _db.Students.Update(model);
             _db.SaveChanges();
 
             return NoContent();
         }
 
-        [HttpPatch("id:int" , Name = "PartialUpdateStudent")]
+        [HttpPatch("id" , Name = "PartialUpdateStudent")]
         public IActionResult PartialUpdateStudent(int id , JsonPatchDocument<StudentDTO> patchStudentDTO)
         {
             if(patchStudentDTO == null || id == 0)
@@ -163,9 +164,6 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             return NoContent();
         }
-
-
-
 
     }
 }

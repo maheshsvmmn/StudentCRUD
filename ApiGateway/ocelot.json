@@ -1,0 +1,78 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/studentAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+      "UpstreamPathTemplate": "/student",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH" , "DELETE" ],
+      "QueryStrings": [
+        {
+          "Name": "id",
+          "In": "Query",
+          "Required": false
+        }
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/studentAPI/id",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+
+      "QueryStrings": [
+        {
+          "Name": "id",
+          "In": "Query",
+          "Required": false
+        }
+      ],
+
+      "UpstreamPathTemplate": "/student/id",
+      "UpstreamHttpMethod": [ "GET" , "DELETE" , "PUT" , "PATCH" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/teacherAPI",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+      "UpstreamPathTemplate": "/teacher",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH" , "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/teacherAPI/id",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5025
+        }
+      ],
+
+      "QueryStrings": [
+        {
+          "Name": "id",
+          "In": "Query",
+          "Required": false
+        }
+      ],
+
+      "UpstreamPathTemplate": "/teacher/id",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE", "PATCH" , "GET" ]
+    }
+
+  ]
+}
