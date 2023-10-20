@@ -10,14 +10,23 @@
         }
       ],
       "UpstreamPathTemplate": "/schoolApiGateway/student",
-      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH" , "DELETE" ],
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH", "DELETE" ],
       "QueryStrings": [
         {
           "Name": "id",
           "In": "Query",
           "Required": false
         }
-      ]
+      ],
+      "RateLimitOptions": {
+        "ClientWhitelist": [
+          "127.0.0.1"
+        ],
+        "EnableRateLimiting": true,
+        "Period": "1s",
+        "PeriodTimespan": 1,
+        "Limit": 5
+      }
     },
     {
       "DownstreamPathTemplate": "/api/studentAPI/id",
@@ -73,6 +82,7 @@
       "UpstreamPathTemplate": "/schoolApiGateway/teacher/id",
       "UpstreamHttpMethod": [ "POST", "PUT", "DELETE", "PATCH", "GET" ]
     }
+
 
   ]
 }
