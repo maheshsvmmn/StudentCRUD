@@ -9,7 +9,7 @@
           "Port": 5025
         }
       ],
-      "UpstreamPathTemplate": "/student",
+      "UpstreamPathTemplate": "/schoolApiGateway/student",
       "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH" , "DELETE" ],
       "QueryStrings": [
         {
@@ -37,8 +37,8 @@
         }
       ],
 
-      "UpstreamPathTemplate": "/student/id",
-      "UpstreamHttpMethod": [ "GET" , "DELETE" , "PUT" , "PATCH" ]
+      "UpstreamPathTemplate": "/schoolApiGateway/student/id",
+      "UpstreamHttpMethod": [ "GET", "DELETE", "PUT", "PATCH" ]
     },
     {
       "DownstreamPathTemplate": "/api/teacherAPI",
@@ -49,8 +49,8 @@
           "Port": 5025
         }
       ],
-      "UpstreamPathTemplate": "/teacher",
-      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH" , "DELETE" ]
+      "UpstreamPathTemplate": "/schoolApiGateway/teacher",
+      "UpstreamHttpMethod": [ "POST", "PUT", "GET", "PATCH", "DELETE" ]
     },
     {
       "DownstreamPathTemplate": "/api/teacherAPI/id",
@@ -70,8 +70,8 @@
         }
       ],
 
-      "UpstreamPathTemplate": "/teacher/id",
-      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE", "PATCH" , "GET" ]
+      "UpstreamPathTemplate": "/schoolApiGateway/teacher/id",
+      "UpstreamHttpMethod": [ "POST", "PUT", "DELETE", "PATCH", "GET" ]
     }
 
   ]

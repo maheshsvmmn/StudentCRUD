@@ -4,12 +4,13 @@ using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Data;
 using Microsoft.AspNetCore.JsonPatch;
 using AutoMapper;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MagicVilla_VillaAPI.Controllers
 {
     [Route("api/studentAPI")]
     [ApiController]
-
+    [EnableRateLimiting("fixed")]
     
     public class StudentAPIController : ControllerBase
     {
