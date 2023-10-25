@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
 using MagicVilla_VillaAPI.Data;
+using MagicVilla_VillaAPI.Models;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Students_API.Models;
 using Students_API.Data;
 using Students_API.Models;
 using Students_API.Models.Dto;
+using Students_API.Services;
 
-namespace Students_API.Controllers
+namespace teachers_API.Controllers
 {
     [Route("api/teacherAPI")]
     [ApiController]
@@ -14,19 +18,33 @@ namespace Students_API.Controllers
     {
         private readonly ApplicationDBContext _db;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cache;
 
-        public TeacherAPIController(ApplicationDBContext db, IMapper mapper)
+        public TeacherAPIController(ApplicationDBContext db, IMapper mapper , ICacheService cache)
         {
             _db = db;
             _mapper = mapper;
+            _cache = cache;
         }
 
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetTeachers()
+        public async Task<IActionResult> GetTeachers()
         {
-            return Ok(_db.Teachers.ToList());
+            var teachers = _cache.GetData<IEnumerable<Teacher>>("teachers");
+            if (teachers != null && teachers.Count() > 0)
+            {
+                return Ok(new { source = "cache", data = teachers });
+            }
+
+            var teachersFromDB = await _db.Teachers.ToListAsync();
+
+            // saving data to cache if not exists
+            var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+            _cache.SetData<IEnumerable<Teacher>>("teachers", teachersFromDB, expiryTime);
+
+            return Ok(new { source = "database", data = teachersFromDB });
         }
 
         [HttpGet("id")]
@@ -37,22 +55,43 @@ namespace Students_API.Controllers
                 return BadRequest();
             }
 
-            var teacher = _db.Teachers.FirstOrDefault(u => u.Id == id);
+            // getting data from cache
+            var allTeachers = _cache.GetData<IEnumerable<Teacher>>("teachers");
+            var teacher = allTeachers?.FirstOrDefault(u => u.Id == id);
+            if (teacher != null)
+            {
+                return Ok(new { source = "cache", data = teacher });
+            }
 
-            if (teacher == null) return NotFound();
+            var allTeachersFromDb = _db.Teachers.ToList();
+            var teacherFromDb = allTeachersFromDb?.FirstOrDefault(u => u.Id == id);
 
-            return Ok(_mapper.Map<TeacherDto>(teacher));
+            // syncing db and cache
+            var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+            _cache.SetData<IEnumerable<Teacher>>("students", allTeachersFromDb, expiryTime);
+
+            if (teacherFromDb == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new { source = "database", data = _mapper.Map<TeacherDto>(teacherFromDb) });
+
         }
 
         [HttpPost]
         public IActionResult AddTeacher([FromBody] TeacherDto teacher)
         {
-            Teacher model = _mapper.Map<Teacher>(teacher);
+            // making cache empty
+            _cache.RemoveData("teachers");
 
+            Teacher model = _mapper.Map<Teacher>(teacher);
             model.HiringDate = DateTime.Now;
             model.Rating = 3;
+
             _db.Teachers.Add(model);
             _db.SaveChanges();
+
             return Ok(model);
         }
 
@@ -67,6 +106,18 @@ namespace Students_API.Controllers
             var teacher = _db.Teachers.FirstOrDefault(u => u.Id == id);
 
             if (teacher == null) return NotFound();
+
+            // making changes in cache
+            var allTeachers = _cache.GetData<IEnumerable<Teacher>>("teachers");
+
+            if (allTeachers != null)
+            {
+                // if cache contains some data alredy then delete a student with specific id otherwise not
+                var remainingTeachers = allTeachers.Where(teacher => teacher.Id != id);
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Teacher>>("teachers", remainingTeachers, expiryTime);
+            }
+
 
             _db.Remove(teacher);
             _db.SaveChanges();
@@ -90,6 +141,20 @@ namespace Students_API.Controllers
             model.Id = id;
             model.Rating = oldTeacher.Rating;
             model.HiringDate = oldTeacher.HiringDate;
+
+            // making changes in cache
+            var allTeachers = _cache.GetData<IEnumerable<Teacher>>("teachers");
+
+            if (allTeachers != null)
+            {
+                var remainingTeachers = allTeachers.Where(teacher => teacher.Id != id).ToList();
+                remainingTeachers.Add(model);
+
+                remainingTeachers = remainingTeachers.OrderBy(teacher => teacher.Id).ToList();
+
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Teacher>>("teachers", remainingTeachers, expiryTime);
+            }
 
             _db.Update(model);
             _db.SaveChanges();
@@ -119,6 +184,21 @@ namespace Students_API.Controllers
             var newTeacher = _mapper.Map<Teacher>(teacherDto);
             newTeacher.Rating = teacher.Rating;
             newTeacher.HiringDate = teacher.HiringDate;
+
+            // making changes in cache
+            var allTeachers = _cache.GetData<IEnumerable<Teacher>>("teachers");
+
+            if (allTeachers != null)
+            {
+                var remainingTeachers = allTeachers.Where(teacher => teacher.Id != id).ToList();
+                remainingTeachers.Add(newTeacher);
+
+                remainingTeachers = remainingTeachers.OrderBy(teacher => teacher.Id).ToList();
+
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Teacher>>("teachers", remainingTeachers, expiryTime);
+            }
+
 
             _db.Update(newTeacher);
             _db.SaveChanges();

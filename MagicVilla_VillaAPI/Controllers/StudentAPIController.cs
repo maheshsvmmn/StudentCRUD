@@ -5,6 +5,8 @@ using MagicVilla_VillaAPI.Data;
 using Microsoft.AspNetCore.JsonPatch;
 using AutoMapper;
 using Microsoft.AspNetCore.RateLimiting;
+using Students_API.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagicVilla_VillaAPI.Controllers
 {
@@ -16,22 +18,36 @@ namespace MagicVilla_VillaAPI.Controllers
     {
         private readonly ApplicationDBContext _db;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cache;
+        private readonly ILogger<StudentAPIController> _logger;
 
-        public StudentAPIController(ApplicationDBContext db , IMapper mapper)
+        public StudentAPIController(ApplicationDBContext db , IMapper mapper , ICacheService cache , ILogger<StudentAPIController> logger)
         {
             _db = db;
             _mapper = mapper;
+            _cache = cache;
+            _logger = logger;
         }
 
 
 
-        public ActionResult<StudentDTO> CreatedAT { get; private set; }
-        public ApplicationDBContext Db { get; }
-
         [HttpGet]
-        public IActionResult GetStudents()
+        public async Task<IActionResult> GetStudents()
         {
-            return Ok(_db.Students.ToList());
+            // getting data from cache
+            var students = _cache.GetData<IEnumerable<Student>>("students");
+            if (students != null && students.Count() > 0)
+            {
+                return Ok(new { source = "cache", data = students });
+            }
+
+            var studentsFromDB = await _db.Students.ToListAsync();
+
+            // saving data to cache if not exists
+            var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+            _cache.SetData<IEnumerable<Student>>("students", studentsFromDB, expiryTime);
+
+            return Ok(new {source = "database" , data = studentsFromDB});
         }
 
 
@@ -53,14 +69,27 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            var student = _db.Students.FirstOrDefault(u => u.Id == id);
+            // getting data from cache
+            var allStudents = _cache.GetData<IEnumerable<Student>>("students");
+            var student = allStudents?.FirstOrDefault(u => u.Id == id);
+            if (student != null )
+            {
+                return Ok(new { source = "cache", data = student });
+            }
 
-            if (student == null)
+            var allStudentsFromDb = _db.Students.ToList();
+            var studentFromDb = allStudentsFromDb?.FirstOrDefault(u => u.Id == id);
+
+            // syncing db and cache
+            var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+            _cache.SetData<IEnumerable<Student>>("students", allStudentsFromDb, expiryTime);
+
+            if (studentFromDb == null)
             {
                 return NotFound();
             }
 
-            return Ok(student);
+            return Ok(new { source = "database", data = studentFromDb });
         }
 
 
@@ -77,6 +106,9 @@ namespace MagicVilla_VillaAPI.Controllers
 
             //student.Id = StudentData.StudentsList.OrderByDescending(u => u.Id).FirstOrDefault().Id + 1;
             //StudentData.StudentsList.Add(student);
+
+            // making cache empty
+            _cache.RemoveData("students");
 
             Student model = _mapper.Map<Student>(student);
 
@@ -100,13 +132,24 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
 
-            //var student = StudentData.StudentsList.FirstOrDefault(u => u.Id == id);
             var student = _db.Students.FirstOrDefault(u => u.Id == id);
             if (student == null)
             {
                 return NotFound();
             }
 
+            // making changes in cache
+            var allStudents = _cache.GetData< IEnumerable<Student>>("students");
+            
+            if(allStudents != null) 
+            {
+                // if cache contains some data alredy then delete a student with specific id otherwise not
+                var remainingStudents = allStudents.Where(student => student.Id != id);
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Student>>("students", remainingStudents, expiryTime);
+            }
+
+            // making changes in database
             _db.Students.Remove(student);
             _db.SaveChanges();
 
@@ -120,13 +163,25 @@ namespace MagicVilla_VillaAPI.Controllers
 
         public IActionResult UpdateStudent(int id, [FromBody] StudentDTO updatedStudent)
         {
-            //if (id != updatedStudent.Id)
-            //{
-            //    return BadRequest();
-            //}
+            
 
             Student model = _mapper.Map<Student>(updatedStudent);
             model.Id = id;
+
+            // making changes in cache
+            var allStudents = _cache.GetData<IEnumerable<Student>>("students");
+
+            if (allStudents != null)
+            {
+                var remainingStudents = allStudents.Where(student => student.Id != id).ToList();
+                remainingStudents.Add(model);
+
+                remainingStudents = remainingStudents.OrderBy(student => student.Id).ToList();
+
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Student>>("students", remainingStudents, expiryTime);
+            }
+
             _db.Students.Update(model);
             _db.SaveChanges();
 
@@ -154,6 +209,20 @@ namespace MagicVilla_VillaAPI.Controllers
             patchStudentDTO.ApplyTo(studentDTO, ModelState);
 
             Student model = _mapper.Map<Student>(studentDTO);
+
+            // making changes in cache
+            var allStudents = _cache.GetData<IEnumerable<Student>>("students");
+
+            if (allStudents != null)
+            {
+                var remainingStudents = allStudents.Where(student => student.Id != id).ToList();
+                remainingStudents.Add(model);
+
+                remainingStudents = remainingStudents.OrderBy(student => student.Id).ToList();
+
+                var expiryTime = DateTimeOffset.Now.AddMinutes(2);
+                _cache.SetData<IEnumerable<Student>>("students", remainingStudents, expiryTime);
+            }
 
 
             _db.Students.Update(model);
