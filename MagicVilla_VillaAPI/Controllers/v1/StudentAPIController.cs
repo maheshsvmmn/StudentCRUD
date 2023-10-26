@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Students_API.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace MagicVilla_VillaAPI.Controllers
+namespace Students_API.Controllers.v1
 {
-    [Route("api/studentAPI")]
+    [Route("api/v{version:apiVersion}/studentAPI")]
     [ApiController]
     [EnableRateLimiting("fixed")]
-    
+    [ApiVersion("1.0" , Deprecated = true)]
+
     public class StudentAPIController : ControllerBase
     {
         private readonly ApplicationDBContext _db;
@@ -21,7 +22,7 @@ namespace MagicVilla_VillaAPI.Controllers
         private readonly ICacheService _cache;
         private readonly ILogger<StudentAPIController> _logger;
 
-        public StudentAPIController(ApplicationDBContext db , IMapper mapper , ICacheService cache , ILogger<StudentAPIController> logger)
+        public StudentAPIController(ApplicationDBContext db, IMapper mapper, ICacheService cache, ILogger<StudentAPIController> logger)
         {
             _db = db;
             _mapper = mapper;
@@ -38,7 +39,7 @@ namespace MagicVilla_VillaAPI.Controllers
             var students = _cache.GetData<IEnumerable<Student>>("students");
             if (students != null && students.Count() > 0)
             {
-                return Ok(new { source = "cache", data = students });
+                return Ok(new { source = "cache", apiVersion = 1 , data = students });
             }
 
             var studentsFromDB = await _db.Students.ToListAsync();
@@ -47,7 +48,7 @@ namespace MagicVilla_VillaAPI.Controllers
             var expiryTime = DateTimeOffset.Now.AddMinutes(2);
             _cache.SetData<IEnumerable<Student>>("students", studentsFromDB, expiryTime);
 
-            return Ok(new {source = "database" , data = studentsFromDB});
+            return Ok(new { source = "database", apiVersion = 1 , data = studentsFromDB });
         }
 
 
@@ -72,7 +73,7 @@ namespace MagicVilla_VillaAPI.Controllers
             // getting data from cache
             var allStudents = _cache.GetData<IEnumerable<Student>>("students");
             var student = allStudents?.FirstOrDefault(u => u.Id == id);
-            if (student != null )
+            if (student != null)
             {
                 return Ok(new { source = "cache", data = student });
             }
@@ -139,14 +140,14 @@ namespace MagicVilla_VillaAPI.Controllers
             }
 
             // making changes in cache
-            var allStudents = _cache.GetData< IEnumerable<Student>>("students");
-            
-            if(allStudents != null) 
+            var allStudents = _cache.GetData<IEnumerable<Student>>("students");
+
+            if (allStudents != null)
             {
                 // if cache contains some data alredy then delete a student with specific id otherwise not
                 var remainingStudents = allStudents.Where(student => student.Id != id);
                 var expiryTime = DateTimeOffset.Now.AddMinutes(2);
-                _cache.SetData<IEnumerable<Student>>("students", remainingStudents, expiryTime);
+                _cache.SetData("students", remainingStudents, expiryTime);
             }
 
             // making changes in database
@@ -163,7 +164,7 @@ namespace MagicVilla_VillaAPI.Controllers
 
         public IActionResult UpdateStudent(int id, [FromBody] StudentDTO updatedStudent)
         {
-            
+
 
             Student model = _mapper.Map<Student>(updatedStudent);
             model.Id = id;
@@ -188,17 +189,17 @@ namespace MagicVilla_VillaAPI.Controllers
             return NoContent();
         }
 
-        [HttpPatch("id" , Name = "PartialUpdateStudent")]
-        public IActionResult PartialUpdateStudent(int id , JsonPatchDocument<StudentDTO> patchStudentDTO)
+        [HttpPatch("id", Name = "PartialUpdateStudent")]
+        public IActionResult PartialUpdateStudent(int id, JsonPatchDocument<StudentDTO> patchStudentDTO)
         {
-            if(patchStudentDTO == null || id == 0)
+            if (patchStudentDTO == null || id == 0)
             {
                 return BadRequest();
             }
 
             var student = _db.Students.FirstOrDefault(u => u.Id == id);
 
-            if(student == null)
+            if (student == null)
             {
                 return NotFound();
             }
@@ -233,6 +234,15 @@ namespace MagicVilla_VillaAPI.Controllers
                 return BadRequest();
             }
             return NoContent();
+        }
+
+        // endpoint for cleaing cache
+        [HttpGet("clearCache")]
+        public IActionResult ClearCache()
+        {
+            _cache.RemoveData("students");
+            return NoContent();
+
         }
 
     }

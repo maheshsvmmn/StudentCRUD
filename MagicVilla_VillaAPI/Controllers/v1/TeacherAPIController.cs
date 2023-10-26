@@ -10,17 +10,18 @@ using Students_API.Models;
 using Students_API.Models.Dto;
 using Students_API.Services;
 
-namespace teachers_API.Controllers
+namespace Students_API.Controllers.v1
 {
-    [Route("api/teacherAPI")]
+    [Route("api/v{version:apiVersion}/teacherAPI")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class TeacherAPIController : ControllerBase
     {
         private readonly ApplicationDBContext _db;
         private readonly IMapper _mapper;
         private readonly ICacheService _cache;
 
-        public TeacherAPIController(ApplicationDBContext db, IMapper mapper , ICacheService cache)
+        public TeacherAPIController(ApplicationDBContext db, IMapper mapper, ICacheService cache)
         {
             _db = db;
             _mapper = mapper;
@@ -100,7 +101,8 @@ namespace teachers_API.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult RemoveTeacher(int id) {
+        public IActionResult RemoveTeacher(int id)
+        {
             if (id == 0) return BadRequest();
 
             var teacher = _db.Teachers.FirstOrDefault(u => u.Id == id);
@@ -115,7 +117,7 @@ namespace teachers_API.Controllers
                 // if cache contains some data alredy then delete a student with specific id otherwise not
                 var remainingTeachers = allTeachers.Where(teacher => teacher.Id != id);
                 var expiryTime = DateTimeOffset.Now.AddMinutes(2);
-                _cache.SetData<IEnumerable<Teacher>>("teachers", remainingTeachers, expiryTime);
+                _cache.SetData("teachers", remainingTeachers, expiryTime);
             }
 
 
@@ -128,7 +130,7 @@ namespace teachers_API.Controllers
         [HttpPut("id")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public IActionResult ChangeTeacherDetails(int id , [FromBody] TeacherDto newTeacher)
+        public IActionResult ChangeTeacherDetails(int id, [FromBody] TeacherDto newTeacher)
         {
             if (id == 0)
             {
@@ -165,15 +167,15 @@ namespace teachers_API.Controllers
 
 
         [HttpPatch("id")]
-        
-        public IActionResult UpdateTeacherDetails(int id , JsonPatchDocument<TeacherDto> patchDto)
+
+        public IActionResult UpdateTeacherDetails(int id, JsonPatchDocument<TeacherDto> patchDto)
         {
-            if(patchDto == null)
+            if (patchDto == null)
             {
                 return BadRequest();
             }
 
-            var teacher = _db.Teachers.FirstOrDefault(u => u.Id==id);
+            var teacher = _db.Teachers.FirstOrDefault(u => u.Id == id);
 
             if (teacher == null) return NotFound();
 
@@ -203,7 +205,7 @@ namespace teachers_API.Controllers
             _db.Update(newTeacher);
             _db.SaveChanges();
             return NoContent();
-                    
+
         }
 
     }
