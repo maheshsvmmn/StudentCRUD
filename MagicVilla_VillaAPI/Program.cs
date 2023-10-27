@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Students_API.Services;
+using Students_API.Services.Health;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-// added on demand
+// <<<<<<<<<<<<<<<<-------------------  added on demand ----------------------->>>>>>>>>>>>>>>>>>>
+
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddScoped<ICacheService, CacheService>();
 
@@ -44,6 +46,7 @@ builder.Services.AddVersionedApiExplorer(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+builder.Services.AddHealthChecks().AddCheck<ApiHealthCheck>("JokesApiChecks");
 
 // applying rate limiting on api level
 //builder.Services.AddRateLimiter(options =>
@@ -83,6 +86,7 @@ app.UseHttpsRedirection();
 //app.UseCors();
 //app.UseRateLimiter();
 
+app.MapHealthChecks("/health");
 
 app.UseAuthorization();
 
