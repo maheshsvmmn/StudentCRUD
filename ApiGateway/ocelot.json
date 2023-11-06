@@ -1,7 +1,7 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/studentAPI",
+      "DownstreamPathTemplate": "/api/v1/studentAPI",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -29,7 +29,7 @@
       }
     },
     {
-      "DownstreamPathTemplate": "/api/studentAPI/id",
+      "DownstreamPathTemplate": "/api/v1/studentAPI/id",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

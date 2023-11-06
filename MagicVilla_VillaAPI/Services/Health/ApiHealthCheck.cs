@@ -8,14 +8,12 @@ namespace Students_API.Services.Health
     {
         public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
-            var url = "https://chuck-norris-jokes.p.rapidapi.com/de/jokes/random";
+            var url = "https://localhost:7156/api/v1/studentAPI/apihealthf";
 
             var client = new RestClient();
 
             // making request
             var request = new RestRequest(url , Method.Get);
-            request.AddHeader("X-RapidAPI-Key", "2f137258e8mshea440cda633b608p1a0a0bjsn79357f76b228");
-            request.AddHeader("X-RapidAPI-Host", "chuck-norris-jokes.p.rapidapi.com");
 
             var response = client.Execute(request);
 

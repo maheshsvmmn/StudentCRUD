@@ -1,10 +1,16 @@
 using MagicVilla_VillaAPI.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Students_API.Configurations;
 using Students_API.Services;
+using Students_API.Services.Authorization;
 using Students_API.Services.Health;
+using System.Security.Cryptography.Xml;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,10 +54,59 @@ builder.Services.AddVersionedApiExplorer(options =>
 
 builder.Services.AddHealthChecks().AddCheck<ApiHealthCheck>("JokesApiChecks");
 
+builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+
+//// adding authentication
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+
+//    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+
+//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+//}).AddJwtBearer(
+//    jwt =>
+//    {
+//        var key = Encoding.ASCII.GetBytes(builder.Configuration.GetSection(key: "JwtConfig:Secret").Value);
+//        jwt.SaveToken = true;
+//        jwt.TokenValidationParameters = new TokenValidationParameters()
+//        {
+//            ValidateIssuerSigningKey = true,
+//            IssuerSigningKey = new SymmetricSecurityKey(key),
+//            ValidateIssuer = false,//for development only
+//            ValidateAudience = false,//for development only
+//            RequireExpirationTime = false,//for development only, needs to be changed when tokens will be refreshed
+//            ValidateLifetime = true,
+//        };
+//    });
+
+
+// authentication
+var key = "kygmtest12345678";
+
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+
+builder.Services.AddSingleton<JwtAuthenticationManager>(new JwtAuthenticationManager(key));
+
+
 // applying rate limiting on api level
 //builder.Services.AddRateLimiter(options =>
 //{
-//    options.AddFixedWindowLimiter("fixed",
 //        policy =>
 //        {
 //            policy.PermitLimit = 2;
@@ -87,7 +142,7 @@ app.UseHttpsRedirection();
 //app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

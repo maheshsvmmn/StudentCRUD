@@ -7,13 +7,14 @@ using AutoMapper;
 using Microsoft.AspNetCore.RateLimiting;
 using Students_API.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Students_API.Controllers.v1
 {
     [Route("api/v{version:apiVersion}/studentAPI")]
     [ApiController]
     [EnableRateLimiting("fixed")]
-    [ApiVersion("1.0" , Deprecated = true)]
+    [ApiVersion("1.0")]
 
     public class StudentAPIController : ControllerBase
     {
@@ -31,7 +32,7 @@ namespace Students_API.Controllers.v1
         }
 
 
-
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetStudents()
         {
@@ -243,6 +244,13 @@ namespace Students_API.Controllers.v1
             _cache.RemoveData("students");
             return NoContent();
 
+        }
+
+
+        // api health check endpoint
+        [HttpGet("apihealth")]
+        public IActionResult GetApiHeatlh() {
+            return Ok(new {status = "healthy"});
         }
 
     }
