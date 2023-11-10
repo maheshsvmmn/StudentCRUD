@@ -32,7 +32,6 @@ namespace Students_API.Controllers.v1
         }
 
 
-        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetStudents()
         {
@@ -53,7 +52,7 @@ namespace Students_API.Controllers.v1
         }
 
 
-        [HttpGet("id", Name = "GetStudent")]
+        [HttpGet("{id}", Name = "GetStudentById")]
 
         // this is much more readable 
         [ProducesResponseType(StatusCodes.Status200OK)] // possible return status from this request
@@ -64,7 +63,7 @@ namespace Students_API.Controllers.v1
         //[ProducesResponseType(200 , Type = typeof(StudentDTO)] // possible return status from this request
         //[ProducesResponseType(404)]
         //[ProducesResponseType(400)]
-        public ActionResult<StudentDTO> GetStudent(int id)
+        public ActionResult<StudentDTO> GetStudentById(int id)
         {
             if (id == 0)
             {
@@ -123,7 +122,7 @@ namespace Students_API.Controllers.v1
 
 
         // delete request
-        [HttpDelete("id", Name = "RemoveStudent")]
+        [HttpDelete("{id}", Name = "RemoveStudentv1")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -158,7 +157,7 @@ namespace Students_API.Controllers.v1
             return NoContent();
         }
 
-        [HttpPut("id", Name = "UpdateStudent")]
+        [HttpPut("{id}", Name = "UpdateStudentv1")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -190,7 +189,7 @@ namespace Students_API.Controllers.v1
             return NoContent();
         }
 
-        [HttpPatch("id", Name = "PartialUpdateStudent")]
+        [HttpPatch("{id}", Name = "PartialUpdateStudentv1")]
         public IActionResult PartialUpdateStudent(int id, JsonPatchDocument<StudentDTO> patchStudentDTO)
         {
             if (patchStudentDTO == null || id == 0)

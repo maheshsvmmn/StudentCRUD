@@ -5,7 +5,9 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Students_API", "MagicVilla_VillaAPI\Students_API.csproj", "{011E0D1B-FC9A-42BF-8859-A55FE765BB54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{59F605FD-8BCC-417B-83C4-9D6ABEEC7842}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{59F605FD-8BCC-417B-83C4-9D6ABEEC7842}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGatewayYarp", "ApiGatewayYarp\ApiGatewayYarp.csproj", "{9423802C-4294-4F77-BD39-227F2026859F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{59F605FD-8BCC-417B-83C4-9D6ABEEC7842}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59F605FD-8BCC-417B-83C4-9D6ABEEC7842}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59F605FD-8BCC-417B-83C4-9D6ABEEC7842}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9423802C-4294-4F77-BD39-227F2026859F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9423802C-4294-4F77-BD39-227F2026859F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9423802C-4294-4F77-BD39-227F2026859F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9423802C-4294-4F77-BD39-227F2026859F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
