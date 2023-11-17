@@ -1,3 +1,6 @@
+using ApiGatewayYarp.Middlewares;
+using Microsoft.AspNetCore.Mvc;
+
 namespace ApiGatewayYarp
 {
     public class Program
@@ -16,6 +19,7 @@ namespace ApiGatewayYarp
 
             builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
             builder.Services.AddHealthChecks();
+            builder.Services.AddTransient<FilterRequestMiddleware>();
 
             var app = builder.Build();
 
@@ -26,6 +30,8 @@ namespace ApiGatewayYarp
                 app.UseSwaggerUI();
             }
 
+            
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
@@ -33,7 +39,11 @@ namespace ApiGatewayYarp
 
             app.MapControllers();
 
-            app.MapReverseProxy();
+            app.MapReverseProxy(proxyPipeline =>
+            {
+                //proxyPipeline.UseFilterRequestMiddleware();
+                //app.UseMiddleware<FilterRequestMiddleware>();
+            });
 
             app.MapHealthChecks("health");
 

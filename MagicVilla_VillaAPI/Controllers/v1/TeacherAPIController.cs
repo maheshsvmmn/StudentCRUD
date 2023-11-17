@@ -48,7 +48,7 @@ namespace Students_API.Controllers.v1
             return Ok(new { source = "database", data = teachersFromDB });
         }
 
-        [HttpGet("id")]
+        [HttpGet("{id}")]
         public IActionResult GetTeacherById(int id)
         {
             if (id <= 0)
@@ -97,7 +97,7 @@ namespace Students_API.Controllers.v1
         }
 
 
-        [HttpDelete("id")]
+        [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -127,7 +127,7 @@ namespace Students_API.Controllers.v1
             return NoContent();
         }
 
-        [HttpPut("id")]
+        [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public IActionResult ChangeTeacherDetails(int id, [FromBody] TeacherDto newTeacher)
@@ -166,7 +166,7 @@ namespace Students_API.Controllers.v1
         }
 
 
-        [HttpPatch("id")]
+        [HttpPatch("{id}")]
 
         public IActionResult UpdateTeacherDetails(int id, JsonPatchDocument<TeacherDto> patchDto)
         {
