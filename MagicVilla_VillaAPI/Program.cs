@@ -5,16 +5,21 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using SqlKata.Compilers;
+using SqlKata.Execution;
 using Students_API.Configurations;
 using Students_API.Services;
 using Students_API.Services.Authorization;
 using Students_API.Services.Health;
+using System.Data.OracleClient;
+using System.Data.SqlClient;
 using System.Security.Cryptography.Xml;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
 builder.Services.AddDbContext<ApplicationDBContext>(option =>
 {
     option.UseSqlServer(builder.Configuration.GetConnectionString("defaultSQlConnection"));
@@ -55,6 +60,17 @@ builder.Services.AddVersionedApiExplorer(options =>
 builder.Services.AddHealthChecks().AddCheck<ApiHealthCheck>("JokesApiChecks");
 
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
+
+// adding sql kata service
+
+//sql server
+//using var connection = new SqlConnection(builder.Configuration.GetConnectionString("defaultSQlConnection"));
+//var compiler = new SqlServerCompiler();
+
+// oracle server
+using var connection = new OracleConnection(builder.Configuration.GetConnectionString("oracleConnectionString"));
+var compiler = new OracleCompiler();
+builder.Services.AddSingleton<QueryFactory>(new QueryFactory(connection , compiler));
 
 //// adding authentication
 //builder.Services.AddAuthentication(options =>

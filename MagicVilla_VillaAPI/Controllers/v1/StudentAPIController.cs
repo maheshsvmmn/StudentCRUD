@@ -8,6 +8,11 @@ using Microsoft.AspNetCore.RateLimiting;
 using Students_API.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using SqlKata.Compilers;
+using SqlKata.Execution;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Data.SqlClient;
+using Newtonsoft.Json;
 
 namespace Students_API.Controllers.v1
 {
@@ -22,13 +27,17 @@ namespace Students_API.Controllers.v1
         private readonly IMapper _mapper;
         private readonly ICacheService _cache;
         private readonly ILogger<StudentAPIController> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly QueryFactory _dbFromSqlkata;
 
-        public StudentAPIController(ApplicationDBContext db, IMapper mapper, ICacheService cache, ILogger<StudentAPIController> logger)
+        public StudentAPIController(ApplicationDBContext db, IMapper mapper, ICacheService cache, ILogger<StudentAPIController> logger, IConfiguration configuration , QueryFactory dbFromSqlkata)
         {
             _db = db;
             _mapper = mapper;
             _cache = cache;
             _logger = logger;
+            _configuration = configuration;
+            _dbFromSqlkata = dbFromSqlkata;
         }
 
 
@@ -36,17 +45,40 @@ namespace Students_API.Controllers.v1
         public async Task<IActionResult> GetStudents()
         {
             // getting data from cache
-            var students = _cache.GetData<IEnumerable<Student>>("students");
-            if (students != null && students.Count() > 0)
-            {
-                return Ok(new { source = "cache", apiVersion = 1 , data = students });
-            }
+            //var students = _cache.GetData<IEnumerable<Student>>("students");
+            //if (students != null && students.Count() > 0)
+            //{
+            //    return Ok(new { source = "cache", apiVersion = 1, data = students });
+            //}
 
             var studentsFromDB = await _db.Students.ToListAsync();
 
             // saving data to cache if not exists
             var expiryTime = DateTimeOffset.Now.AddMinutes(2);
             _cache.SetData<IEnumerable<Student>>("students", studentsFromDB, expiryTime);
+
+            // call with sql kata
+            //using var connection = new SqlConnection("Server=.;Database=Students_DB_API;TrustServerCertificate=True;Trusted_Connection=True;MultipleActiveResultSets=true");
+
+            //using var connection = new SqlConnection(_configuration.GetConnectionString("defaultSQlConnection"));
+            //var compiler = new SqlServerCompiler();
+            //var db = new QueryFactory(connection, compiler);
+
+            //var studentsFromSqlKata = _dbFromSqlkata.Query("students").Get<Student>().ToList();
+
+            //{ "TESTBEDID":1.0,"NAME":"INGURWN130117","ENVID":1.0,"HOSTNAME":null,"LASTCONNECTDATE":null,"ACTIVEFLAG":0.0,"SERIAL_NUMBER":null,"HOST_ID":null,"AFLAG":null,"INSTANCE_NUMBER":0.0}
+
+
+            _dbFromSqlkata.Query("TESTBED").Insert(new { TESTBEDID=2.0, NAME="test", ENVID=1.0, HOSTNAME="test", ACTIVEFLAG=0.0, INSTANCE_NUMBER=1.0 });
+
+            var testbeds = _dbFromSqlkata.Query("TESTBED").Get();
+
+            foreach (var testbed in testbeds)
+            {
+                var json = JsonConvert.SerializeObject(testbed);
+                await Console.Out.WriteLineAsync(json);
+            }
+
 
             return Ok(new { source = "database", apiVersion = 1 , data = studentsFromDB });
         }
